@@ -8,9 +8,7 @@ export class UsersController {
   constructor(private usersService: UsersService) {}
 
   @Post('/')
-  createUser(@Body() newUser: CreateUserDto) {
-    return this.usersService.createOne(newUser)
-  }
+ 
 
   @Get('/')
   getAll() {

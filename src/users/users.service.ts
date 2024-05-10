@@ -4,12 +4,14 @@ import { User } from './user.entity';
 import { Repository } from 'typeorm';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { CreateProfileDto } from './dto/create-profile.dto';
+import { Profile } from './profile.entity';
 
 @Injectable()
 export class UsersService {
   constructor(
-    @InjectRepository(User)
-    private usersRepository: Repository<User>
+    @InjectRepository(User) private usersRepository: Repository<User>,
+    @InjectRepository(Profile) private profileRepository: Repository<Profile>
   ) {}
 
   async findAll() {
@@ -50,7 +52,7 @@ export class UsersService {
   async updateOne(id: number, user: UpdateUserDto) {
 
     const isExist = await this.usersRepository.findOneBy({id})
-
+    
     if(!isExist) return new HttpException('USER_NOT_FOUND', HttpStatus.NOT_FOUND)
     
     const result = await this.usersRepository.update({id: id}, user);
@@ -59,5 +61,20 @@ export class UsersService {
     // return await this.usersRepository.save(result)
 
     return {...isExist, result} 
+  }
+  
+  async createProfile(id: number, profile: CreateProfileDto) {
+    
+    const userFound = await this.usersRepository.findOneBy({id})
+    
+    if(!userFound) return new HttpException('USER_NOT_FOUND', HttpStatus.NOT_FOUND)
+
+    const newProfile =  this.profileRepository.create(profile)
+    const savedProfile = await this.profileRepository.save(newProfile)
+
+    userFound.profile = savedProfile
+
+    return this.usersRepository.save(userFound)
+
   }
 }
