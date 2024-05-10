@@ -8,6 +8,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
   imports: [
     TypeOrmModule.forRoot({
       // database connection...
+    
     }),
     UsersModule],
   controllers: [AppController],
