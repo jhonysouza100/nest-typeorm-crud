@@ -7,27 +7,27 @@ import { UpdateUserDto } from './dto/update-user.dto';
 export class UsersController {
   constructor(private usersService: UsersService) {}
 
-  @Post('/create')
+  @Post('/')
   createUser(@Body() newUser: CreateUserDto) {
     return this.usersService.createOne(newUser)
   }
 
-  @Get('/getall')
+  @Get('/')
   getAll() {
     return this.usersService.findAll()
   }
 
-  @Get('/getone/:id')
+  @Get('/:id')
   getOne(@Param('id', ParseIntPipe) id: number) {
     return this.usersService.findOne(id)
   }
 
-  @Delete('/delete/:id')
+  @Delete('/:id')
   deleteOne(@Param('id', ParseIntPipe) id: number) {
     return this.usersService.removeOne(id)
   }
 
-  @Put('/update/:id')
+  @Put('/:id')
   updateOne(@Param('id', ParseIntPipe) id: number, @Body() user: UpdateUserDto) {
     return this.usersService.updateOne(id, user)
   }

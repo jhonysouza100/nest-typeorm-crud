@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { HttpCode, HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from './user.entity';
 import { Repository } from 'typeorm';
@@ -12,24 +12,52 @@ export class UsersService {
     private usersRepository: Repository<User>
   ) {}
 
-  findAll(): Promise<User[]> {
-    return this.usersRepository.find()
+  async findAll() {
+    return await this.usersRepository.find()
   }
 
-  findOne(id: number): Promise<User | null> {
-    return this.usersRepository.findOneBy({id});
+  async findOne(id: number) {
+
+    const isExist = await this.usersRepository.findOneBy({id})
+
+    if(!isExist) return new HttpException('NO_SUCH_USER', HttpStatus.NOT_FOUND)
+
+    return isExist
   }
 
-  async createOne(user: CreateUserDto): Promise<User> {
+  async createOne(user: CreateUserDto) {
+
+    const isExist = await this.usersRepository.findOneBy({username: user.username})
+
+    if(isExist) return new HttpException('USER_ALREDY_EXISTS', HttpStatus.CONFLICT)
+
     const newUser = this.usersRepository.create(user)
-    return this.usersRepository.save(newUser)
+
+    return await this.usersRepository.save(newUser)
   }
   
   async removeOne(id: number) {
-    return this.usersRepository.delete(id);
+    
+    const isExist = await this.usersRepository.findOneBy({id})
+
+    if(!isExist) return new HttpException('USER_NOT_FOUND', HttpStatus.NOT_FOUND)
+
+    const result = await this.usersRepository.delete(id)
+
+    return {...isExist, result};
   }
 
   async updateOne(id: number, user: UpdateUserDto) {
-    return this.usersRepository.update({id: id}, user);
+
+    const isExist = await this.usersRepository.findOneBy({id})
+
+    if(!isExist) return new HttpException('USER_NOT_FOUND', HttpStatus.NOT_FOUND)
+    
+    const result = await this.usersRepository.update({id: id}, user);
+    
+    // const result = Object.assign(isExist, user);
+    // return await this.usersRepository.save(result)
+
+    return {...isExist, result} 
   }
 }
