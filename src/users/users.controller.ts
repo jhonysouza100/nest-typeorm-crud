@@ -2,12 +2,21 @@ import { Controller, Post, Body, Get, Param, ParseIntPipe, Put, Delete } from '@
 import { CreateUserDto } from './dto/create-user.dto';
 import { UsersService } from './users.service';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { CreateProfileDto } from './dto/create-profile.dto';
 
 @Controller('users')
 export class UsersController {
   constructor(private usersService: UsersService) {}
 
+  @Post('/:id')
+  createprofile(@Param('id', ParseIntPipe) id: number, @Body() profile: CreateProfileDto) {
+    return this.usersService.createProfile(id, profile)
+  }
+
   @Post('/')
+  createone(@Body() user: CreateUserDto) {
+    return this.usersService.createOne(user)
+  }
  
 
   @Get('/')

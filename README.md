@@ -22,11 +22,11 @@
   <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
   [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
 
-## Description
+## Descripcion
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+Nodejs, y MySQL en conjunto con TypeORM. En este proyecto crea módulos, controladores, servicios y entidades que interactuen con una base de datos y relacionandolas (OneToOne, OneToMany y ManyToOne).
 
-## Installation
+## Instalacion
 
 ```bash
 $ npm install
@@ -45,31 +45,181 @@ $ npm run start:dev
 $ npm run start:prod
 ```
 
-## Test
+## Eslint
+
+`.eslintrc.js`
 
 ```bash
-# unit tests
-$ npm run test
-
-# e2e tests
-$ npm run test:e2e
-
-# test coverage
-$ npm run test:cov
+# eslint rules config
+"prettier/prettier": [
+    "error",
+    {
+      "endOfLine": "auto"
+    }
+  ]
 ```
 
-## Support
+## Install @nestjs/typeorm
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+```bash
+npm install --save @nestjs/typeorm typeorm mysql2
+```
 
-## Stay in touch
+`/app.module.ts`
 
-- Author - [Kamil Myśliwiec](https://kamilmysliwiec.com)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+```javascript
 
-## License
+import { Module } from '@nestjs/common';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { UsersModule } from './users/users.module';
 
-Nest is [MIT licensed](LICENSE).
+@Module({
+  imports: [
+    TypeOrmModule.forRoot({
+      type: 'mysql',
+      host: 'localhost',
+      port: 3306,
+      username: 'root',
+      password: 'root',
+      database: 'new_database_name',
+      entities: [],
+      synchronize: true,
+    }),
+    UsersModule // importa el modulo "users"
+  ],
+})
+export class AppModule {}
+```
 
-https://docs.nestjs.com/techniques/database
+## Creacion de un nuevo proyecto basico
+
+```bash
+nest g mo users
+```
+
+```bash
+nest g co users
+```
+
+```bash
+nest g s users
+```
+
+```bash
+|| nest g res users # nest generate resource users
+```
+
+## Typeorm Entidades
+
+`/users/users.entity.ts`
+
+```javascript
+import { Entity, Column, PrimaryGeneratedColumn, OneToOne, JoinColumn, OneToMany } from 'typeorm'
+import {Profile} from './profile.entity'
+import { Posts } from '../posts/post.entity'
+
+@Entity({name: 'users'})
+export class User {
+
+  @PrimaryGeneratedColumn() 
+  id: number
+  
+  @Column({unique: true}) 
+  username: string
+  
+  @Column() 
+  password: string
+  
+  @Column({type: 'datetime', default: () => 'CURRENT_TIMESTAMP'}) 
+  createdAt: Date
+  
+  @Column({nullable: true}) 
+  authStrategy: string
+
+  @OneToOne(() => Profile) // relacion uno a uno
+  @JoinColumn()
+  profile: Profile
+
+  @OneToMany(() => Posts, post => post.author) // relacion uno a muchos
+  posts: Posts[]
+}
+```
+
+`/posts/posts.entity.ts`
+
+```javascript
+import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
+import { User } from "../users/user.entity";
+
+@Entity('users_posts')
+export class Posts {
+  @PrimaryGeneratedColumn()
+  id: number
+
+  @Column()
+  title: string
+
+  @Column()
+  content: string
+
+  @Column()
+  authorId: number
+
+  @ManyToOne(() => User, user => user.posts) // relacion muchos a uno
+  author: User
+}
+```
+
+## User Module
+
+`/users/users.module.ts`
+
+```javascript
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { User } from './user.entity';
+
+@Module({
+  imports: [TypeOrmModule.forFeature([User])],
+  controllers: [UsersController],
+  providers: [UsersService],
+  exports: [UsersService] // exporta los servicios hacia el "app.module"
+})
+export class UsersModule {}
+```
+
+`/users/users.controller.ts`
+
+```javascript
+@Controller('users')
+export class Usercontroller {
+
+  constructor(
+    private usersService: UsersService
+  ) {}
+
+  @Get('/')
+  getAll() {
+    return this.usersService.findAll()
+  }
+}
+```
+
+`/users/user.service.ts`
+
+```javascript
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { User } from './user.entity';
+
+@Ingectable()
+export class UserService {
+
+  constructor(
+    @InjectRepository(User) private usersRepository: repository<User>
+  ) {}
+
+  async finAll() {
+    return await this.usersRepository.find()
+  }
+}
+```

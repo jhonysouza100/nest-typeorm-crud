@@ -20,7 +20,7 @@ export class UsersService {
 
   async findOne(id: number) {
 
-    const isExist = await this.usersRepository.findOneBy({id})
+    const isExist = await this.usersRepository.findOne({where: {id}, relations: ['posts']})
 
     if(!isExist) return new HttpException('NO_SUCH_USER', HttpStatus.NOT_FOUND)
 
